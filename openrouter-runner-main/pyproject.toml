@@ -1,0 +1,56 @@
+[tool.poetry]
+name = "openrouter-runner-modal"
+version = "0.1.0"
+description = "OpenRouter runner on Modal backend"
+authors = ["OpenRouter <support@openrouter.ai>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.12"
+huggingface-hub = "^0.17.1"
+modal = "^0.62.124"
+scipy = "^1.11.3"
+fastapi = "^0.108.0"
+sentry-sdk = "1.39.1"
+ray = "^2.9.0"
+datadog-api-client = "2.21.0"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.1.9"
+pre-commit = "^3.6.0"
+pytest = "^7.4.3"
+pytest-asyncio = "^0.23.3"
+httpx = "^0.26.0"
+pydantic-settings = "^2.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 80
+
+[tool.ruff.lint]
+select = [
+    "E", # pycodestyle
+    "F", # Pyflakes
+    "UP", # pyupgrade
+    "B", # flake8-bugbear
+    "SIM", # flake8-simplify
+    "I", # isort
+]
+ignore = [
+    "E501", # line too long, handled by ruff formatter already
+    "E741", # ambiguous variable name -- often fine
+    "B008", # function calls in argument defaults -- expected for fastapi dependency injection
+]
+
+[tool.ruff.per-file-ignores]
+"gcp/shap-e/app.py" = ["E402"] # module level import not at top of file -- expected for sys.path.insert() usage
+
+[tool.ruff.lint.isort]
+known-third-party = ["modal"]
+known-first-party = [
+    "runner",
+    "shared",
+]
