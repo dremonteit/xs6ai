@@ -1,0 +1,178 @@
+name: XS6 Builds
+
+on:
+  push:
+    branches: [develop, release, nightly]
+  pull_request:
+    branches: [develop]
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'Message for build'
+        required: true
+  schedule:
+    - cron: '0 0 * * *' # Runs nightly at midnight
+
+env:
+  USE_HARD_LINKS: false
+
+jobs:
+  check_updates:
+    runs-on: ubuntu-24.04
+    name: 'Check latest commit: ${{ github.event.inputs.message }}'
+    outputs:
+      should_run: ${{ steps.should_run.outputs.should_run }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Use Node.js version from .nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - name: Install dependencies
+        uses: nick-fields/retry@v3
+        with:
+          command: pnpm install
+          timeout_minutes: 15
+          max_attempts: 3
+          retry_on: error
+      - id: should_run
+        name: Check for new commits
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+          git checkout develop
+          git submodule update --init --recursive --remote --rebase --force
+          git add .
+          git commit -am "Update submodules [skip ci]" --no-verify || true
+          git push origin develop --no-verify
+
+          git rebase develop
+
+          CHANGES_COUNT=$(git log @{u}.. | wc -l)
+          MANUAL_REBUILD="${{ github.event_name == 'workflow_dispatch' }}"
+          VERSION_BUMP="${{ contains(github.event.inputs.message, '[version bump]') }}"
+
+          if [ $CHANGES_COUNT -gt 0 ] || [[ $MANUAL_REBUILD == "true" && $VERSION_BUMP == "true" ]]; then
+            git checkout develop
+            pnpm version -m "%s [skip ci]" prerelease --preid=nightly
+            git commit --all --amend --no-edit --no-verify
+            git push origin develop --no-verify
+            git checkout nightly
+          fi
+
+          git merge --ff-only origin/develop --no-verify
+
+          if [ $CHANGES_COUNT -eq 0 ] && [ $MANUAL_REBUILD != "true" ]; then
+            echo "No changes found - terminating build"
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          else
+            echo "Pushing rebased commits"
+            git push origin $(git rev-parse --abbrev-ref HEAD) --no-verify
+          fi
+
+  build_mac:
+    name: 'macOS Build: ${{ github.event.inputs.message }}'
+    needs: check_updates
+    if: ${{ needs.check_updates.outputs.should_run != 'false' }}
+    runs-on: macos-14
+    steps:
+      - name: Set environment variables
+        run: |
+          echo "NPM_CACHE=$HOME/.npm" >> $GITHUB_ENV
+          echo "ELECTRON_CACHE=$HOME/.cache/electron" >> $GITHUB_ENV
+          echo "ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder" >> $GITHUB_ENV
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - name: Install dependencies
+        uses: nick-fields/retry@v3
+        with:
+          command: pnpm install
+          timeout_minutes: 15
+          max_attempts: 3
+          retry_on: error
+      - name: Build XS6 for macOS
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: true
+          APPLEID: ${{ secrets.APPLEID }}
+          APPLEID_PASSWORD: ${{ secrets.APPLEID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: pnpm build --publish always
+
+  build_linux:
+    name: 'Linux Build: ${{ github.event.inputs.message }}'
+    needs: check_updates
+    if: ${{ needs.check_updates.outputs.should_run != 'false' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - name: Install dependencies
+        uses: nick-fields/retry@v3
+        with:
+          command: pnpm install
+          timeout_minutes: 15
+          max_attempts: 3
+          retry_on: error
+      - name: Build XS6 for Linux
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+        run: pnpm build --publish always
+
+  build_windows:
+    name: 'Windows Build: ${{ github.event.inputs.message }}'
+    needs: check_updates
+    if: ${{ needs.check_updates.outputs.should_run != 'false' }}
+    runs-on: windows-2022
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - name: Install dependencies
+        uses: nick-fields/retry@v3
+        with:
+          command: pnpm install
+          timeout_minutes: 15
+          max_attempts: 3
+          retry_on: error
+      - name: Build XS6 for Windows
+        env:
+          GH_TOKEN: ${{ secrets.FERDIUM_PUBLISH_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        run: pnpm build --publish always
