@@ -1,0 +1,72 @@
+{
+  "name": "XS6",
+  "productName": "XS6",
+  "desktopName": "xs6.desktop",
+  "appId": "xs6.io",
+  "version": "1.0.0",
+  "description": "XS6 - The reasoning-driven search engine, designed for intelligent, contextual answers.",
+  "author": "XS6 Contributors <support@xs6.com>",
+  "license": "Apache-2.0",
+  "copyright": "org.xs6",
+  "main": "index.js",
+  "homepage": "https://github.com/dremonteit/xs6ai",
+  "repository": "https://github.com/dremonteit/xs6ai.git",
+  "private": true,
+  "engines": {
+    "node": "20.18.0",
+    "pnpm": "9.12.3"
+  },
+  "engine-strict": true,
+  "volta": {
+    "node": "20.18.0",
+    "pnpm": "9.12.3"
+  },
+  "packageManager": "pnpm@9.12.3",
+  "scripts": {
+    "prepare": "is-ci || husky",
+    "start": "electron ./build",
+    "start:dev": "cross-env NODE_ENV=development electron .",
+    "test": "jest",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "pnpm lint --fix",
+    "build": "electron-builder",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
+    "dev": "node esbuild.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "reformat-files": "prettier --write \"**/*.{js,jsx,ts,tsx}\"",
+    "manage-translations": "pnpm extract && pnpm compile",
+    "contributors": "all-contributors"
+  },
+  "dependencies": {
+    "@electron/remote": "2.1.2",
+    "@emotion/react": "11.13.3",
+    "@emotion/styled": "11.13.0",
+    "@mui/material": "5.16.7",
+    "electron-updater": "6.3.9",
+    "fs-extra": "11.2.0",
+    "lodash": "4.17.21",
+    "moment": "2.30.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "sqlite3": "5.1.6",
+    "uuid": "9.0.1"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "7.10.0",
+    "@typescript-eslint/parser": "7.10.0",
+    "electron": "33.2.1",
+    "electron-builder": "24.13.3",
+    "eslint": "8.57.0",
+    "eslint-config-prettier": "9.1.0",
+    "eslint-plugin-react": "7.34.1",
+    "prettier": "3.3.3",
+    "typescript": "5.4.5",
+    "ts-node": "10.9.2"
+  },
+  "optionalDependencies": {
+    "node-mac-permissions": "2.4.0"
+  },
+  "browserslist": [
+    "last 2 Chrome versions"
+  ]
+}
