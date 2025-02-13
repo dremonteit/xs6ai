@@ -1,0 +1,82 @@
+name: App - Bug report
+description: Report a bug in XS6
+labels: ["bug :beetle:"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        1. Please fill our form below to report a bug.
+
+  - type: checkboxes
+    attributes:
+      label: Avoid duplicates
+      description: Please ensure you've completed the following
+      options:
+        - label: I agree to follow the Code of Conduct that this project adheres to.
+          required: true
+  - type: input
+    attributes:
+      label: XS6
+      description: What version of XS6 are you using?
+      placeholder: 1.1.0-
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: What Operating System are you using?
+      options:
+        - Windows
+        - macOS
+        - Ubuntu
+        - Other Linux
+        - Other (specify below)
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Operating System Version
+      description: What Operating System version are you using? On Windows, click Start button > Settings > System > About. On macOS, click the Apple Menu > About This Mac. On Linux, use lsb_release or uname -a.
+      placeholder: "e.g. Windows 10 version 1909, macOS Catalina 10.15.7, or Ubuntu 20.04"
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: What arch are you using?
+      options:
+        - x64
+        - ia32
+        - arm64 (including Apple Silicon)
+        - Other (specify in Additional information section)
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected Response
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Actual Response
+      description: A clear description of what actually happens.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: Explain to us how we can reproduce your bug on our computer
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Screenshots
+      description: If possible, add screenshots to help visualize your problem
+  - type: textarea
+    attributes:
+      label: Additional information
+      description: If your problem needs further explanation, please add more information here
