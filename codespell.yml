@@ -1,0 +1,44 @@
+# GitHub Actions workflow to check for spelling errors using Codespell.
+# Configuration is managed via .codespellrc
+
+name: Codespell
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  codespell:
+    name: Spell Check with Codespell
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Install Codespell
+        run: |
+          pip install codespell
+
+      - name: Run Codespell
+        run: |
+          codespell --ignore-words-list="hte,fo,teh" --skip="*.lock,*.json,*.md"
+
+      - name: Report Errors (if any)
+        run: |
+          if [ -s "codespell_report.log" ]; then
+            cat codespell_report.log
+            exit 1
+          else
+            echo "No spelling errors found!"
+        
